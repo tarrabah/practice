@@ -359,29 +359,57 @@ class SquareMatrix(Matrix):
                 extended_matrix_elements[i].append(var_line_B[i])
 
             extended_matrix = Matrix(extended_matrix_elements)
-            print(extended_matrix)
+            #print(extended_matrix)
 
 
-            for i in range(self.size()[1]): #columns
-                print("column:", i)
-                for j in range(i, self.size()[0]): #searching for the first line with element != 0 in i-th column
-                    if extended_matrix.elements[j][i] != 0:
-                        extended_matrix.elements[i], extended_matrix.elements[j] = extended_matrix.elements[j], extended_matrix.elements[i]
-                        break
-                print('----------------------')
-                print(extended_matrix)
-                #TODO: написать деление нормирование матрицы начиная с i+1-го столбца
-                for j in range(i, self.size()[0])
-                print('----------------------')
-                print(extended_matrix)
+            for i in range(self.size()[1] - 1): #M[i, i] - main element
+                if math.fabs(extended_matrix.elements[i][i]) < 10 ** (-7):
+                    for j in range(i, self.size()[0]): #searching for the first line with element != 0 in i-th column
+                        if extended_matrix.elements[j][i] != 0:
+                            extended_matrix.elements[i], extended_matrix.elements[j] = extended_matrix.elements[j], extended_matrix.elements[i]
+                            break
+                    #print("\trow shifted")
+                    #print(extended_matrix)
+                #print('main element:', extended_matrix.elements[i][i])
+                line = copy.deepcopy(extended_matrix.elements[i])
+                #print("\tline:", line)
 
                 for j in range(i + 1, self.size()[0]):
-                    extended_matrix.elements[j] = list(map(lambda x: operator.sub(*x), zip(extended_matrix.elements[j], extended_matrix.elements[i])))
-                print('----------------------')
-                print(extended_matrix)
+                    if math.fabs(extended_matrix.elements[j][i]) > 10 ** (-7):
+                        #print("coof:", extended_matrix.elements[j][i], '//',  extended_matrix.elements[i][i])
+                        #print("line:", list(map(lambda x: operator.mul(x, extended_matrix.elements[j][i] / extended_matrix.elements[i][i]), extended_matrix.elements[i])))
+                        divided_line = list(map(lambda x: operator.mul(x, extended_matrix.elements[j][i] / extended_matrix.elements[i][i]), extended_matrix.elements[i]))
+                        extended_matrix.elements[j] = list(
+                            map(lambda x: operator.sub(*x), zip(extended_matrix.elements[j], divided_line)))
+                #print("subctraction ok")
+                #print(extended_matrix)
+
+            #TODO: check zero lines
+
+            for i in range(self.size()[0]):
+                count_zeroes = 0
+                for j in range(self.size()[1]):
+                    if math.fabs(extended_matrix.elements[i][j]) < 10 ** (-7):
+                        count_zeroes += 1
+                if count_zeroes == self.size()[0]:
+                    return []
+
+            result = [0 for _ in range(self.size()[0])]
+
+            for i in range(self.size()[0] - 1, -1, -1):
+
+                for j in range(self.size()[0] - 1, i, -1):
+                    extended_matrix.elements[i][-1] -= extended_matrix.elements[i][j] * result[j]
+
+                result[i] = extended_matrix.elements[i][-1] / extended_matrix.elements[i][i]
+                #print(extended_matrix.elements[i][i])
+
+            return list(map(lambda t: [t], result))
 
 
-a = SquareMatrix([[0, -2, 0], [3, 4, 2], [-1, 3, 1]])
+
+
+a = SquareMatrix([[4, 2, -6], [-8, -7, 1], [4, 2, -8]])
 b = [5, 3, 6]
 print(a.cramers_rule(b))
 print(a.invertible_matrix_solve(b))
