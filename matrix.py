@@ -320,10 +320,12 @@ class SquareMatrix(Matrix):
             raise column_size_error(self, var_line_B)
 
         else:
+            text = ""
             det_A = self.get_det()
-            # print(det_A)
+            text += "Δ = " + str(det_A) + "\n"
             if math.fabs(det_A) < 10 ** (-7):
-                return []
+                text += "Нет решения\n"
+                return [[], text]
             else:
                 det_Ax = []
                 x = []
@@ -331,8 +333,10 @@ class SquareMatrix(Matrix):
                 for i in range(self.size()[1]):
                     det_Ax.append(self.insert_column(var_line_B, i).get_det())
                     x.append(det_Ax[i] / det_A)
-
-                return list(map(lambda t: [t], x))
+                    text += "Δ" + str(i + 1) + " = " + str(det_Ax[i]) + "\nx" + str(i + 1) + " = " + "Δ" + str(i + 1) + "/Δ = " +  str(x[i]) + "\n"
+                text += "Решение:\n" + "\n".join(list(map(lambda x: "x" + str(x[0] + 1) + " = " + str(x[1]) , enumerate(x))))
+                #print(text)
+                return [list(map(lambda t: [t], x)), text]
 
 
     def invertible_matrix_solve(self, var_line_B):
@@ -342,12 +346,15 @@ class SquareMatrix(Matrix):
 
         else:
             det_A = self.get_det()
-            # print(det_A)
+            text = ''
             if math.fabs(det_A) < 10 ** (-7):
-                return []
+                text += "Нет решения"
+                return [[], text]
             else:
+                text += "Обратная матрица:\n" + self.get_invertible_matrix().__str__()+ '\n'
                 result = self.get_invertible_matrix() * Matrix(list(map(lambda x: [x], var_line_B)))
-                return result.elements
+                text += "Решение:\n" + "\n".join(list(map(lambda x: "x" + str(x[0] + 1) + " = " + str(x[1][0]) , enumerate(result.elements))))
+                return [result.elements, text]
 
 
     def gauss_solve(self, var_line_B):
@@ -359,8 +366,7 @@ class SquareMatrix(Matrix):
                 extended_matrix_elements[i].append(var_line_B[i])
 
             extended_matrix = Matrix(extended_matrix_elements)
-            #print(extended_matrix)
-
+            text = "Расширенная матрица системы:\n" + extended_matrix.__str__() + '\n'
 
             for i in range(self.size()[1] - 1): #M[i, i] - main element
                 if math.fabs(extended_matrix.elements[i][i]) < 10 ** (-7):
@@ -368,23 +374,16 @@ class SquareMatrix(Matrix):
                         if extended_matrix.elements[j][i] != 0:
                             extended_matrix.elements[i], extended_matrix.elements[j] = extended_matrix.elements[j], extended_matrix.elements[i]
                             break
-                    #print("\trow shifted")
-                    #print(extended_matrix)
-                #print('main element:', extended_matrix.elements[i][i])
-                line = copy.deepcopy(extended_matrix.elements[i])
-                #print("\tline:", line)
+
+                    text += "Поднимем ряд\n"  + extended_matrix.__str__() + '\n'
 
                 for j in range(i + 1, self.size()[0]):
                     if math.fabs(extended_matrix.elements[j][i]) > 10 ** (-7):
-                        #print("coof:", extended_matrix.elements[j][i], '//',  extended_matrix.elements[i][i])
-                        #print("line:", list(map(lambda x: operator.mul(x, extended_matrix.elements[j][i] / extended_matrix.elements[i][i]), extended_matrix.elements[i])))
                         divided_line = list(map(lambda x: operator.mul(x, extended_matrix.elements[j][i] / extended_matrix.elements[i][i]), extended_matrix.elements[i]))
                         extended_matrix.elements[j] = list(
                             map(lambda x: operator.sub(*x), zip(extended_matrix.elements[j], divided_line)))
-                #print("subctraction ok")
-                #print(extended_matrix)
 
-            #TODO: check zero lines
+                text += "Обнуляем столбец\n" + extended_matrix.__str__() + '\n'
 
             for i in range(self.size()[0]):
                 count_zeroes = 0
@@ -392,7 +391,8 @@ class SquareMatrix(Matrix):
                     if math.fabs(extended_matrix.elements[i][j]) < 10 ** (-7):
                         count_zeroes += 1
                 if count_zeroes == self.size()[0]:
-                    return []
+                    text += "Найдена нулевая строка\n"
+                    return [[], text]
 
             result = [0 for _ in range(self.size()[0])]
 
@@ -402,15 +402,14 @@ class SquareMatrix(Matrix):
                     extended_matrix.elements[i][-1] -= extended_matrix.elements[i][j] * result[j]
 
                 result[i] = extended_matrix.elements[i][-1] / extended_matrix.elements[i][i]
-                #print(extended_matrix.elements[i][i])
 
-            return list(map(lambda t: [t], result))
+            text += "Решение:\n" + "\n".join(list(map(lambda x: "x" + str(x[0] + 1) + " = " + str(x[1]) , enumerate(result))))
+
+            return [list(map(lambda t: [t], result)), text]
 
 
-
-
-a = SquareMatrix([[4, 2, -6], [-8, -7, 1], [4, 2, -8]])
-b = [5, 3, 6]
-print(a.cramers_rule(b))
-print(a.invertible_matrix_solve(b))
-print(a.gauss_solve(b))
+#a = SquareMatrix([[4, 2, -8], [-8, -7, 1], [4, 2, -6]])
+#b = [5, 3, 6]
+#print(a.cramers_rule(b))
+#print(a.invertible_matrix_solve(b))
+#print(a.gauss_solve(b))
