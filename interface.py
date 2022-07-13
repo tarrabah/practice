@@ -94,7 +94,7 @@ class app_interface(tk.Tk):
                 )
             )
         except BaseException as e:
-            raise interface_error("Слишком много пробелов")
+            raise interface_error("Слишком много разделителей")
 
         for i in range(1, len(text)):
             if len(text[0]) != len(text[i]):
